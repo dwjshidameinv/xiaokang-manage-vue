@@ -8,4 +8,5 @@ export class API{
     // static kindList = (id:Number) =>request.get("menu/kindList"})
     static list2 = (data:IList2) =>request.post("/menu/list2",data)
     static edit = (data:IEdit) =>request.post("/menu/edit",data)
+    static delete = (id:Number) =>request.get("/menu/delete",{params:{id}})
 }

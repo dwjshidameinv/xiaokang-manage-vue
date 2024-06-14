@@ -6,6 +6,7 @@ import TopForm from "../../components/TopForm.vue";
 import Edit from "./editForm.vue";
 import { ElMessage } from "element-plus";
 import { loadavg } from "os";
+import type{ IEdit} from "./type"
 
 const tableData = ref([]);
 const List = reactive({
@@ -57,25 +58,7 @@ watch(
   () => selectData.limit,
   (newValue) => selectMenuList() // 当 limit 改变时，也调用 menuList
 );
-const isLoading = ref(true); // 初始状态为加载中
-const menuList = async () => {
-  try {
-    isLoading.value = true;
-    // 使用setTimeout来模拟加载延迟
-    await new Promise((resolve) => {
-      setTimeout(resolve, 500); // 延迟2秒后解析Promise
-    });
-    let res = await API["list"](selectData); // 假设 API["list"] 返回一个 Promise
-    isLoading.value = false; // 数据加载完成后设置isLoading为false
-    tableData.value = res.data.data.list;
-    console.log(res, "food");
-    console.log(tableData.value, "tableData");
-    total.value = res.data.data.count;
-  } catch (error) {
-    // 处理错误
-    console.error("Error fetching menu list:", error);
-  }
-};
+
 
 const handleSelectValue = (newValue: any) => {
   sel.selectCategoryId = newValue;
@@ -89,6 +72,7 @@ const handleSelectValue2 = (value: any) => {
   sel.stateValue = value;
   console.log(sel.stateValue, "stateValue");
 };
+const isLoading = ref(true); // 初始状态为加载中
 
 const selectMenuList = async () => {
   isLoading.value = true;
@@ -103,10 +87,7 @@ const selectMenuList = async () => {
   }
   isLoading.value = false;
 };
-watch(
-  () => isLoading,
-  (newValue) => menuList()
-);
+
 watch(
   () => isLoading,
   (newValue) => selectMenuList()
@@ -116,9 +97,8 @@ const categoryList = async () => {
   if (res == null) {
     return "error";
   }
-  console.log(res, "categoryList");
   category.value = res.data.data;
-  console.log(category.value, "category");
+  console.log(category.value, "categoryList");
 };
 function formatDateTime(isoString: any) {
   // 使用Date对象解析ISO字符串
@@ -147,7 +127,10 @@ const dialogVisible = ref(false);
 //编辑用户
 // 创建一个用户对象
 const ruleForm = ref<any>({});
-
+// watch(
+//   () => handleEdit,
+//   (newValue) => categoryList
+// );
 const handleEdit = (index: number, row: IMenu) => {
   dialogVisible.value = true;
   // 创建一个新的对象，包含row的所有属性和一个新的categories属性
@@ -157,32 +140,78 @@ const handleEdit = (index: number, row: IMenu) => {
   };
   console.log(index, row, ruleForm.value);
 };
-const editForm = reactive({
+
+// 编辑提交
+const submitEdit = async() => {
+  console.log(ruleForm.value, "aaa");
+
+  const editForm = reactive<IEdit>({
   foodId: ruleForm.value.foodId,
   foodName: ruleForm.value.foodName,
   foodSale: ruleForm.value.foodSale,
   foodImg: ruleForm.value.foodImg,
-  kindId: ruleForm.value.foodKindId,
-});
-const submitEdit = () => {
-  console.log(ruleForm.value, "aaa");
-
-  // let res = await API["edit"](foodId, foodName, foodSale,foodImg,kindId );
-  // if (res.data.meta.code == 200) {
-  //   ElMessage({
-  //     message: res.data.meta.msg,
-  //     type: "success",
-  //   });
-  //   props.onGetUserList();
+  foodKindId: ruleForm.value.foodKindId,
+})
+  let res = await API["edit"](editForm);
+  try {   
+    if (res.data.code === 200) { // 假设这是成功的响应结构  
+      console.log(res, "编辑操作成功");  
+      ElMessage({  
+        message: "修改成功",  
+        type: "success",  
+      });  
+      // 在这里调用 selectMenuList 来重新获取数据  
+      await selectMenuList();  
+    } else {  
+      // 处理错误或失败的响应  
+      ElMessage({  
+        message: "修改失败",  
+        type: "error",  
+      });  
+    }  
+  } catch (error) {  
+    // 处理网络错误或其他异常  
+    console.error(error);  
+    ElMessage({  
+      message: "发生错误",  
+      type: "error",  
+    });  
+  }  
   dialogVisible.value = false;
-};
+}
 
 const handleClose = (done: () => void) => {
   done();
 };
-
-const handleDelete = (index: number, row: IMenu) => {
+// 删除操作
+const handleDelete = async(index: number, row: IMenu) => {
   console.log(index, row);
+  let id = row.foodId
+   let res = await API["delete"](id);
+   try{
+    if(res.data.code ==200){
+      console.log(res,"删除操作执行")
+      ElMessage({
+        message:"删除成功",
+        type:"success"
+      })
+      await selectMenuList(); 
+    }else {  
+      // 处理错误或失败的响应  
+      ElMessage({  
+        message: res.data.data,  
+        type: "error",  
+      });  
+    }  
+   }catch(error){
+      // 处理网络错误或其他异常  
+    console.error(error);  
+    ElMessage({  
+      message: "发生错误",  
+      type: "error",  
+    });  
+   }
+  
 };
 const multipleSelection = ref<any[]>([]);
 const handleSelectionChange = (val: any[]) => {
@@ -224,10 +253,20 @@ const menu = [
   },
 ];
 
+watch(
+  () => tableData,
+  (newVal, oldVal) => {
+    // 当 ruleForm 发生变化时执行的逻辑
+    console.log("tableData 改变了:")
+  },
+
+)
+
 onMounted(() => {
-  selectMenuList(), categoryList(), menuList();
-});
+  selectMenuList(), categoryList()
+})
 </script>
+
 <template>
   <div>
     <div class="ttop">
@@ -279,11 +318,8 @@ onMounted(() => {
       <el-table-column label="图片" width="100" align="center">
         <template #default="scope">
           <div>
-            <img
-              :src="scope.row.foodImg"
-              alt=""
-              style="width: 40px; height: 40px"
-            />
+             <img v-if="scope.row.foodImg" :src="scope.row.foodImg"  style="width: 40px; height: 40px" />
+             <img v-else src=""  style="width: 40px; height: 40px" />
           </div>
         </template>
       </el-table-column>
