@@ -4,9 +4,10 @@ import { API } from "./api";
 import type { IMenu } from "./type";
 import TopForm from "../../components/TopForm.vue";
 import Edit from "./editForm.vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { loadavg } from "os";
-import type{ IEdit} from "./type"
+import type { IEdit } from "./type";
+import Add from "./addDish.vue"
 
 const tableData = ref([]);
 const List = reactive({
@@ -58,7 +59,6 @@ watch(
   () => selectData.limit,
   (newValue) => selectMenuList() // 当 limit 改变时，也调用 menuList
 );
-
 
 const handleSelectValue = (newValue: any) => {
   sel.selectCategoryId = newValue;
@@ -123,16 +123,13 @@ function formatDateTime(isoString: any) {
 }
 //编辑操作
 // 弹窗
-const dialogVisible = ref(false);
+const dialogVisible1 = ref(false);
 //编辑用户
 // 创建一个用户对象
 const ruleForm = ref<any>({});
-// watch(
-//   () => handleEdit,
-//   (newValue) => categoryList
-// );
+
 const handleEdit = (index: number, row: IMenu) => {
-  dialogVisible.value = true;
+  dialogVisible1.value = true;
   // 创建一个新的对象，包含row的所有属性和一个新的categories属性
   ruleForm.value = {
     ...row,
@@ -142,81 +139,267 @@ const handleEdit = (index: number, row: IMenu) => {
 };
 
 // 编辑提交
-const submitEdit = async() => {
+const submitEdit = async () => {
   console.log(ruleForm.value, "aaa");
 
   const editForm = reactive<IEdit>({
-  foodId: ruleForm.value.foodId,
-  foodName: ruleForm.value.foodName,
-  foodSale: ruleForm.value.foodSale,
-  foodImg: ruleForm.value.foodImg,
-  foodKindId: ruleForm.value.foodKindId,
-})
+    foodId: ruleForm.value.foodId,
+    foodName: ruleForm.value.foodName,
+    foodSale: ruleForm.value.foodSale,
+    foodImg: ruleForm.value.foodImg,
+    foodKindId: ruleForm.value.foodKindId,
+  });
+  console.log("修改的editForm",editForm)
   let res = await API["edit"](editForm);
-  try {   
-    if (res.data.code === 200) { // 假设这是成功的响应结构  
-      console.log(res, "编辑操作成功");  
-      ElMessage({  
-        message: "修改成功",  
-        type: "success",  
-      });  
-      // 在这里调用 selectMenuList 来重新获取数据  
-      await selectMenuList();  
-    } else {  
-      // 处理错误或失败的响应  
-      ElMessage({  
-        message: "修改失败",  
-        type: "error",  
-      });  
-    }  
-  } catch (error) {  
-    // 处理网络错误或其他异常  
-    console.error(error);  
-    ElMessage({  
-      message: "发生错误",  
-      type: "error",  
-    });  
-  }  
-  dialogVisible.value = false;
-}
+  try {
+    if (res.data.code === 200) {
+      // 假设这是成功的响应结构
+      console.log(res, "编辑操作成功");
+      ElMessage({
+        message: "修改成功",
+        type: "success",
+      });
+      // 在这里调用 selectMenuList 来重新获取数据
+      await selectMenuList();
+    } else {
+      // 处理错误或失败的响应
+      ElMessage({
+        message: "修改失败",
+        type: "error",
+      });
+    }
+  } catch (error) {
+    // 处理网络错误或其他异常
+    console.error(error);
+    ElMessage({
+      message: "发生错误",
+      type: "error",
+    });
+  }
+  dialogVisible1.value = false;
+};
 
 const handleClose = (done: () => void) => {
   done();
 };
 // 删除操作
-const handleDelete = async(index: number, row: IMenu) => {
+const handleDelete = (index: number, row: IMenu) => {
   console.log(index, row);
-  let id = row.foodId
-   let res = await API["delete"](id);
-   try{
-    if(res.data.code ==200){
-      console.log(res,"删除操作执行")
+  let id = row.foodId as number;
+  ElMessageBox.confirm("确定要删除吗？", "删除提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      let res = await API["delete"](id);
+      try {
+        if (res.data.code == 200) {
+          console.log(res, "删除操作执行");
+          ElMessage({
+            type: "success",
+            message: "删除成功",
+          });
+          await selectMenuList();
+        } else {
+          // 处理错误或失败的响应
+          ElMessage({
+            message: res.data.data,
+            type: "error",
+          });
+        }
+      } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+      }
+    })
+    .catch(() => {
       ElMessage({
-        message:"删除成功",
-        type:"success"
-      })
-      await selectMenuList(); 
-    }else {  
-      // 处理错误或失败的响应  
-      ElMessage({  
-        message: res.data.data,  
-        type: "error",  
-      });  
-    }  
-   }catch(error){
-      // 处理网络错误或其他异常  
-    console.error(error);  
-    ElMessage({  
-      message: "发生错误",  
-      type: "error",  
-    });  
-   }
-  
+        type: "info",
+        message: "删除取消",
+      });
+    });
 };
+
+//新建菜品
+
+const dialogVisible2 = ref(false)
+const ruleForm2 = ref<any>({});
+const foodName = ref<String>('')
+const handelFoodName = (val:any) =>{
+  foodName.value = val
+  console.log("foodName:",foodName.value)
+}
+const foodKindId = ref<any>('')
+const handleKindId = (val:any)=>{
+  foodKindId.value = val
+  console.log("foodKindId:",foodKindId.value)
+}
+const foodSale = ref<any>('')
+const handleSale = (val:any)=>{
+  foodSale.value = val
+  console.log("foodSale:",foodSale.value)
+}
+const foodImg = ref<String>('')
+const handleFoodImg = (val:any)=>{
+  foodImg.value = val
+  console.log("foodImg:",foodImg.value)
+}
+const addDish = () =>{
+  dialogVisible2.value = true;
+  ruleForm2.value = {
+    categories: category.value, 
+  };
+}
+//新增菜品提交
+const submitAdd = () =>{
+   const addData = reactive<IEdit>({
+    foodName:foodName.value,
+    foodSale:foodSale.value,
+    foodKindId:foodKindId.value,
+    foodImg:foodImg.value
+  })
+  ElMessageBox.confirm("确定要添加吗？", "添加提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+  .then( async()=> {
+    let res = await API['add'](addData)
+    try {
+      if(res.data.code ===200 &&res.data.data == 1){
+        ElMessage({
+          message:"添加成功",
+          type:"success"
+        })
+        await selectMenuList();
+        console.log("添加成功后执行",res)
+      }else{
+          // 处理网络错误或其他异常
+        ElMessage({
+          message: res.data.data,
+          type: "error",
+        });
+      }
+      
+    } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+    }
+  })
+  .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "添加取消",
+      });
+  })
+  dialogVisible2.value = false;
+}
+//在售停售调整
+const handleSaleVal = async (index: number, row: IMenu) =>{
+  // console.log("www",row)
+  const editForm = reactive<IEdit>({
+    foodId:row.foodId,
+    foodState:row.foodState
+  })
+  let res = await API["edit"](editForm);
+   ElMessageBox.confirm("确定修改售卖状态？", "修改提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then( async()=> {
+    let res = await API['edit'](editForm)
+    try {
+      if(res.data.code ===200 &&res.data.data == 1){
+        ElMessage({
+          message:"修改成功",
+          type:"success"
+        })
+        await selectMenuList();
+        console.log("修改成功后执行",res)
+      }else{
+          // 处理网络错误或其他异常
+        ElMessage({
+          message: res.data.data,
+          type: "error",
+        });
+      }
+      
+    } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+    }
+  })
+  .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "添加取消",
+      });
+  })
+}
+//选择操作
+
 const multipleSelection = ref<any[]>([]);
 const handleSelectionChange = (val: any[]) => {
+
   multipleSelection.value = val;
+  console.log("qqq",multipleSelection.value)
 };
+const batchDelete = () => {
+  
+  ElMessageBox.confirm("确定将选择的菜品删除吗？", "删除提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then( async() => {
+      multipleSelection.value.forEach(async(item,index)=>{
+        let id = item.foodId
+        let res = await API["delete"](id);
+      try {
+        if (res.data.code == 200) {
+          console.log(res, "删除操作执行");
+        } else {
+          // 处理错误或失败的响应
+          ElMessage({
+            message: res.data.data,
+            type: "error",
+          });
+        }
+      } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+      }
+      })
+       ElMessage({
+          message: "删除成功",
+          type: "success",
+        });
+        await selectMenuList()
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "删除取消",
+      });
+    });
+}
 const tableRowClassName = ({
   row,
   rowIndex,
@@ -257,14 +440,13 @@ watch(
   () => tableData,
   (newVal, oldVal) => {
     // 当 ruleForm 发生变化时执行的逻辑
-    console.log("tableData 改变了:")
-  },
-
-)
+    console.log("tableData 改变了:");
+  }
+);
 
 onMounted(() => {
-  selectMenuList(), categoryList()
-})
+  selectMenuList(), categoryList();
+});
 </script>
 
 <template>
@@ -284,19 +466,38 @@ onMounted(() => {
         class="MyTopForm"
       />
       <el-button
-        style="
-          background-color: bisque;
-          float: left;
-          line-height: 50px;
-          margin-left: 10px;
-          margin-top: 10px;
-        "
+        style="background-color: bisque; margin-left: 10px"
         @click="selectMenuList"
         >查询</el-button
       >
+
+      <el-button style="margin-left: 50px" type="danger" text @click="batchDelete"
+        >批量删除</el-button
+      >
+      <el-button
+        style="margin-left: 10px; color: #000; font-size: 12px"
+        type="warning"
+        @click="addDish"
+        >+ 新增菜品</el-button
+      >
     </div>
     <div v-if="isLoading" class="loading-box">
-        <svg t="1717852293366" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7137" width="200" height="200"><path d="M521.813333 44.501333a44.245333 44.245333 0 0 0-43.733333 44.672c-0.213333 24.277333 0 48.554667 0 72.832 0 25.002667-0.341333 49.962667 0.085333 74.965334 0.426667 24.789333 20.181333 43.221333 45.226667 43.008a43.776 43.776 0 0 0 43.733333-43.52c0.256-49.237333 0.298667-98.56 0-147.797334-0.170667-25.344-20.053333-44.288-45.312-44.16M342.186667 125.226667c-7.594667-13.013333-19.797333-19.498667-35.072-19.541334-32.213333 0-51.882667 33.877333-35.754667 62.464 23.808 42.24 48.042667 84.266667 72.405333 126.165334 11.904 20.394667 36.693333 26.88 56.704 15.488a41.002667 41.002667 0 0 0 15.914667-55.808 7949.354667 7949.354667 0 0 0-74.154667-128.768m-209.664 215.04c40.661333 23.594667 81.408 47.018667 122.112 70.528 6.144 3.541333 12.544 6.314667 19.882667 5.888a37.717333 37.717333 0 0 0 37.888-28.928c4.565333-16.768-2.474667-33.706667-18.56-43.093334a28154.026667 28154.026667 0 0 0-122.922667-71.253333c-20.650667-11.904-43.861333-6.4-54.869333 12.8-11.178667 19.456-4.565333 41.813333 16.469333 54.016m31.317334 216.32c24.192 0 48.426667 0.170667 72.618666-0.085333 21.461333-0.213333 35.882667-15.061333 35.541334-35.84-0.298667-19.84-15.488-34.304-36.266667-34.304h-142.08c-22.144 0.085333-37.290667 14.677333-37.162667 35.498666 0.128 20.309333 15.189333 34.56 36.864 34.688 23.466667 0.128 46.976 0 70.485334 0m139.093333 91.904a31.402667 31.402667 0 0 0-42.965333-11.861333c-42.666667 24.32-85.077333 49.066667-127.445334 73.813333-10.154667 5.973333-14.933333 15.488-15.104 23.296 0.042667 27.989333 24.96 43.946667 46.208 32.128a5476.778667 5476.778667 0 0 0 128.426667-74.154666c15.786667-9.301333 19.712-27.818667 10.837333-43.221334m84.266667 93.184c-13.098667-3.754667-25.344 1.28-32.896 14.336-23.722667 41.002667-47.36 82.090667-70.826667 123.306667-9.173333 16.042667-5.376 32.682667 8.96 41.216 14.677333 8.789333 31.36 3.754667 40.96-12.8 23.466667-40.405333 46.677333-80.896 70.016-121.344 3.029333-5.248 5.205333-10.666667 5.290667-13.653333 0-16.341333-8.533333-27.392-21.504-31.061334m135.168 40.576c-15.061333 0.085333-25.088 10.922667-25.173333 27.648-0.128 23.253333 0 46.506667 0 69.717334h-0.085334c0 23.936-0.128 47.914667 0 71.850666 0.128 16.725333 10.154667 27.562667 25.173334 27.690667 15.530667 0.128 25.728-10.837333 25.770666-28.16 0.128-46.848 0.128-93.696 0.085334-140.501333 0-17.237333-10.325333-28.330667-25.770667-28.245334m162.389333-23.893333a21.76 21.76 0 0 0-30.933333-8.149333 21.76 21.76 0 0 0-7.808 30.293333c24.064 42.368 48.512 84.565333 72.96 126.72 4.138667 7.168 10.666667 11.008 19.2 10.88a21.973333 21.973333 0 0 0 19.456-32.896c-23.893333-42.538667-48.298667-84.736-72.874667-126.890667m219.946667-37.76l-124.586667-72.106666a18.56 18.56 0 0 0-14.08-2.688c-8.362667 2.048-13.696 7.381333-15.146666 15.701333-1.706667 9.941333 3.541333 16.64 11.818666 21.461333l81.92 47.274667c13.952 8.106667 27.690667 16.512 41.898667 24.064a18.901333 18.901333 0 0 0 28.458667-16.554667 19.029333 19.029333 0 0 0-10.24-17.152m44.8-215.04c-22.826667-0.128-45.653333-0.042667-68.437334-0.042666v-0.042667c-23.125333 0-46.293333-0.085333-69.418666 0-12.373333 0.085333-19.2 5.802667-19.413334 15.872-0.170667 10.197333 6.485333 16.042667 18.944 16.085333 46.293333 0.085333 92.586667 0.128 138.88 0.042667 12.245333 0 19.413333-5.930667 19.626667-15.701333 0.170667-9.941333-7.466667-16.213333-20.224-16.213334m-172.288-116.608c41.344-23.850667 82.645333-47.744 123.904-71.68 4.48-2.56 7.552-6.272 7.466667-11.861333-0.128-10.112-10.24-15.957333-19.712-10.581333-41.728 23.893333-83.285333 48.042667-124.8 72.277333-6.997333 4.096-9.642667 10.538667-5.12 17.92 4.437333 7.210667 11.093333 8.106667 18.261333 3.925333M665.173333 283.349333c4.736-0.256 7.509333-3.157333 9.728-7.04 4.48-7.936 9.173333-15.786667 13.738667-23.68 18.730667-32.554667 37.504-65.109333 56.149333-97.706666 4.693333-8.106667 2.773333-15.274667-4.352-16.981334-7.04-1.706667-9.984 3.413333-12.885333 8.405334l-63.061333 109.525333c-2.602667 4.565333-5.546667 9.045333-7.594667 13.866667-2.858667 6.570667 1.536 13.397333 8.277333 13.610666" fill="#999999" p-id="7138"></path></svg>
+      <svg
+        t="1717852293366"
+        class="icon"
+        viewBox="0 0 1024 1024"
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        p-id="7137"
+        width="200"
+        height="200"
+      >
+        <path
+          d="M521.813333 44.501333a44.245333 44.245333 0 0 0-43.733333 44.672c-0.213333 24.277333 0 48.554667 0 72.832 0 25.002667-0.341333 49.962667 0.085333 74.965334 0.426667 24.789333 20.181333 43.221333 45.226667 43.008a43.776 43.776 0 0 0 43.733333-43.52c0.256-49.237333 0.298667-98.56 0-147.797334-0.170667-25.344-20.053333-44.288-45.312-44.16M342.186667 125.226667c-7.594667-13.013333-19.797333-19.498667-35.072-19.541334-32.213333 0-51.882667 33.877333-35.754667 62.464 23.808 42.24 48.042667 84.266667 72.405333 126.165334 11.904 20.394667 36.693333 26.88 56.704 15.488a41.002667 41.002667 0 0 0 15.914667-55.808 7949.354667 7949.354667 0 0 0-74.154667-128.768m-209.664 215.04c40.661333 23.594667 81.408 47.018667 122.112 70.528 6.144 3.541333 12.544 6.314667 19.882667 5.888a37.717333 37.717333 0 0 0 37.888-28.928c4.565333-16.768-2.474667-33.706667-18.56-43.093334a28154.026667 28154.026667 0 0 0-122.922667-71.253333c-20.650667-11.904-43.861333-6.4-54.869333 12.8-11.178667 19.456-4.565333 41.813333 16.469333 54.016m31.317334 216.32c24.192 0 48.426667 0.170667 72.618666-0.085333 21.461333-0.213333 35.882667-15.061333 35.541334-35.84-0.298667-19.84-15.488-34.304-36.266667-34.304h-142.08c-22.144 0.085333-37.290667 14.677333-37.162667 35.498666 0.128 20.309333 15.189333 34.56 36.864 34.688 23.466667 0.128 46.976 0 70.485334 0m139.093333 91.904a31.402667 31.402667 0 0 0-42.965333-11.861333c-42.666667 24.32-85.077333 49.066667-127.445334 73.813333-10.154667 5.973333-14.933333 15.488-15.104 23.296 0.042667 27.989333 24.96 43.946667 46.208 32.128a5476.778667 5476.778667 0 0 0 128.426667-74.154666c15.786667-9.301333 19.712-27.818667 10.837333-43.221334m84.266667 93.184c-13.098667-3.754667-25.344 1.28-32.896 14.336-23.722667 41.002667-47.36 82.090667-70.826667 123.306667-9.173333 16.042667-5.376 32.682667 8.96 41.216 14.677333 8.789333 31.36 3.754667 40.96-12.8 23.466667-40.405333 46.677333-80.896 70.016-121.344 3.029333-5.248 5.205333-10.666667 5.290667-13.653333 0-16.341333-8.533333-27.392-21.504-31.061334m135.168 40.576c-15.061333 0.085333-25.088 10.922667-25.173333 27.648-0.128 23.253333 0 46.506667 0 69.717334h-0.085334c0 23.936-0.128 47.914667 0 71.850666 0.128 16.725333 10.154667 27.562667 25.173334 27.690667 15.530667 0.128 25.728-10.837333 25.770666-28.16 0.128-46.848 0.128-93.696 0.085334-140.501333 0-17.237333-10.325333-28.330667-25.770667-28.245334m162.389333-23.893333a21.76 21.76 0 0 0-30.933333-8.149333 21.76 21.76 0 0 0-7.808 30.293333c24.064 42.368 48.512 84.565333 72.96 126.72 4.138667 7.168 10.666667 11.008 19.2 10.88a21.973333 21.973333 0 0 0 19.456-32.896c-23.893333-42.538667-48.298667-84.736-72.874667-126.890667m219.946667-37.76l-124.586667-72.106666a18.56 18.56 0 0 0-14.08-2.688c-8.362667 2.048-13.696 7.381333-15.146666 15.701333-1.706667 9.941333 3.541333 16.64 11.818666 21.461333l81.92 47.274667c13.952 8.106667 27.690667 16.512 41.898667 24.064a18.901333 18.901333 0 0 0 28.458667-16.554667 19.029333 19.029333 0 0 0-10.24-17.152m44.8-215.04c-22.826667-0.128-45.653333-0.042667-68.437334-0.042666v-0.042667c-23.125333 0-46.293333-0.085333-69.418666 0-12.373333 0.085333-19.2 5.802667-19.413334 15.872-0.170667 10.197333 6.485333 16.042667 18.944 16.085333 46.293333 0.085333 92.586667 0.128 138.88 0.042667 12.245333 0 19.413333-5.930667 19.626667-15.701333 0.170667-9.941333-7.466667-16.213333-20.224-16.213334m-172.288-116.608c41.344-23.850667 82.645333-47.744 123.904-71.68 4.48-2.56 7.552-6.272 7.466667-11.861333-0.128-10.112-10.24-15.957333-19.712-10.581333-41.728 23.893333-83.285333 48.042667-124.8 72.277333-6.997333 4.096-9.642667 10.538667-5.12 17.92 4.437333 7.210667 11.093333 8.106667 18.261333 3.925333M665.173333 283.349333c4.736-0.256 7.509333-3.157333 9.728-7.04 4.48-7.936 9.173333-15.786667 13.738667-23.68 18.730667-32.554667 37.504-65.109333 56.149333-97.706666 4.693333-8.106667 2.773333-15.274667-4.352-16.981334-7.04-1.706667-9.984 3.413333-12.885333 8.405334l-63.061333 109.525333c-2.602667 4.565333-5.546667 9.045333-7.594667 13.866667-2.858667 6.570667 1.536 13.397333 8.277333 13.610666"
+          fill="#999999"
+          p-id="7138"
+        ></path>
+      </svg>
     </div>
     <!-- 当 isLoading 为 false 且 tableData 有数据时显示表格 -->
 
@@ -307,7 +508,6 @@ onMounted(() => {
       @selection-change="handleSelectionChange"
       :row-class-name="tableRowClassName"
       class="myTable"
-      border
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="菜品名称" width="120" align="center">
@@ -315,11 +515,15 @@ onMounted(() => {
           {{ scope.row.foodName }}
         </template>
       </el-table-column>
-      <el-table-column label="图片" width="100" align="center">
+      <el-table-column label="图片" width="120" align="center">
         <template #default="scope">
           <div>
-             <img v-if="scope.row.foodImg" :src="scope.row.foodImg"  style="width: 40px; height: 40px" />
-             <img v-else src=""  style="width: 40px; height: 40px" />
+            <img
+              v-if="scope.row.foodImg"
+              :src="scope.row.foodImg"
+              style="width: 40px; height: 40px"
+            />
+            <img v-else src="" style="width: 40px; height: 40px" />
           </div>
         </template>
       </el-table-column>
@@ -328,24 +532,24 @@ onMounted(() => {
           <span>{{ scope.row.kindName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="售价" width="100" align="center">
+      <el-table-column label="售价" width="120" align="center">
         <template #default="scope">
           <span>{{ scope.row.foodSale }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" width="100" align="center">
+      <el-table-column label="状态" width="120" align="center">
         <template #default="scope">
           <!-- <span>{{ row.foodState }}</span> -->
           <span v-if="scope.row.foodState == 1">在售</span>
           <span v-else>停售</span>
         </template>
       </el-table-column>
-      <el-table-column label="最后操作时间" width="200" align="center">
+      <el-table-column label="最后操作时间" width="220" align="center">
         <template #default="scope">
           <span>{{ formatDateTime(scope.row.foodAot) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="220" align="center">
+      <el-table-column label="操作" width="240" align="center">
         <template #default="scope">
           <el-button
             size="small"
@@ -370,7 +574,7 @@ onMounted(() => {
             size="small"
             text
             :type="scope.row.foodState == 0 ? 'primary' : 'danger'"
-            @click="handleDelete(scope.$index, scope.row)"
+            @click="handleSaleVal(scope.$index, scope.row)"
           >
             <span v-if="scope.row.foodState == 0">启售</span>
             <span v-else>停售</span>
@@ -501,15 +705,26 @@ onMounted(() => {
       @current-change="handleCurrentChange"
     />
 
-    <el-dialog v-model="dialogVisible" title="编辑菜品" width="500">
+    <el-dialog v-model="dialogVisible1" title="编辑菜品" width="500">
       <Edit :ruleForm="ruleForm" ref="editForm" />
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button @click="dialogVisible1 = false">取消</el-button>
           <el-button type="primary" @click="submitEdit"> 确定 </el-button>
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="dialogVisible2" title="新增菜品" width="500" draggable
+     > 
+    <Add @handleFoodName="handelFoodName" @handleKindId="handleKindId" @handleSale="handleSale" @handleFoodImg="handleFoodImg" :ruleForm ="ruleForm2" />
+     <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible2 = false">取消</el-button>
+          <el-button type="primary" @click="submitAdd"> 确定 </el-button>
+        </div>
+     </template>
+  </el-dialog>
   </div>
 </template>
 
@@ -521,18 +736,17 @@ onMounted(() => {
   --el-table-tr-bg-color: var(--el-color-success-light-9);
 }
 .loading-box {
- width: 800px;
-  svg{
+  width: 800px;
+  svg {
     margin-top: 200px;
     margin-left: 400px;
     width: 100px;
     height: 100px;
   }
- 
 }
 .ttop {
-  height: 50px;
-  line-height: 50px;
+  height: 80px;
+  line-height: 80px;
 }
 
 .MyTopForm {

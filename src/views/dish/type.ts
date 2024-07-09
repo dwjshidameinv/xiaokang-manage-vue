@@ -21,10 +21,12 @@ export interface IList2{
     categoryId?:Number
 }
 export interface IEdit{
-    foodId:Number,
+    foodId?:Number,
     foodName?:String,
     foodSale?:Number,
     foodImg?:String,
-    foodKindId?:Number
+    foodKindId?:Number,
+    foodState?:Number
 
 }
+

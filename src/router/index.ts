@@ -56,7 +56,14 @@ export const asyncRoutes: RouteRecordRaw [] =[
     meta:{
       til:"分类管理",
       icon:"Calendar"
-    }
+    },
+    children:[
+      {
+        path:"/edit",
+        component:()=>import("../views/classify/edit.vue")
+      }
+    ]
+  
   },
   {
     path:"/employee",

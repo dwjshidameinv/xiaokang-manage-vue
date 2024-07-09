@@ -12,7 +12,7 @@ interface IProps {
     placeholder3?:String,
     front3?:String,
     change?:any,
-    menu:any,
+    menu?:any,
 }
 // vue
 const props = defineProps<IProps>()
@@ -76,6 +76,7 @@ const handleChange3 = (value:any)=>{
       :value="item.id"
     />
   </el-select>
+
 </div>
 </template>
 

@@ -1,6 +1,6 @@
 import axios from "axios";
-const baseURL = 'http://192.168.43.170:8080'
-
+const baseURL = 'http://127.0.0.1:8080/'
+// const baseURL = 'http://desktop-b975agl:9090/api'
 const request = axios.create({
     baseURL:baseURL,
     timeout:5000,//超过时间不在访问

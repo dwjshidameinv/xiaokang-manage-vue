@@ -45,7 +45,7 @@ const categories = props.ruleForm.categories;
 const selectValue = ref('');
 
 const handelKindName = (val: number) => {
-  categories.forEach((element) => {
+  categories.forEach((element:any) => {
     if (element.id == val) {
       props.ruleForm.kindName = element.name;
       props.ruleForm.foodKindId = val;
