@@ -450,7 +450,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="border1">
     <div class="ttop">
       <TopForm
         :placeholder1="List.placeholder1"
@@ -510,7 +510,7 @@ onMounted(() => {
       class="myTable"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="菜品名称" width="120" align="center">
+      <el-table-column label="菜品名称" width="120" align="center" >
         <template #default="scope">
           {{ scope.row.foodName }}
         </template>
@@ -729,6 +729,12 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.border1{
+  background-color: #fff;
+   margin-left: 20px;
+   margin-top: 20px;
+   width: 1320px;
+}
 .el-table .warning-row {
   --el-table-tr-bg-color: var(--el-color-warning-light-9);
 }

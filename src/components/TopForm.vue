@@ -38,7 +38,7 @@ const handleChange3 = (value:any)=>{
 </script>
 <template>
 <div>
-    <el-text style="margin: 0 10px;" class="myText">{{props.front1}}：</el-text>
+    <el-text style="margin-left:30px;" class="myText">{{props.front1}}：</el-text>
     <el-input
     v-model="input1"
     style="width: 180px"
@@ -46,7 +46,7 @@ const handleChange3 = (value:any)=>{
     clearable size="default"
     @change="handleChange1"
   />
-  <el-text style="margin: 0 10px;" class="myText">{{props.front2}}：</el-text>
+  <el-text style="margin-left:30px;" class="myText">{{props.front2}}：</el-text>
   <el-select
     v-model="ipValue"
     clearable
@@ -61,8 +61,8 @@ const handleChange3 = (value:any)=>{
       :value="item.id"
     />
   </el-select>
-<el-text class="myText" style="margin: 0 10px;">{{props.front3}}：</el-text>
-  <el-select width="50px"
+<el-text class="myText" style="margin-left: 30px;">{{props.front3}}：</el-text>
+  <el-select width="50px" 
     v-model="ipValue2"
     clearable
     :placeholder="props.placeholder2"

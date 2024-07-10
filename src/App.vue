@@ -69,6 +69,7 @@ const handleClose = (key: string, keyPath: string[]) => {
     }
     .right {
         flex: 1;
+        background-color: #E8E9EB;
     }
 }
 </style>
