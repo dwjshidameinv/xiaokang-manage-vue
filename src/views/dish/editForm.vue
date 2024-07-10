@@ -97,8 +97,16 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   // 如果文件类型和大小都符合要求，返回 true  
   return true;  
 }
+const handleFoodImg = (file: any, fileList: any) =>{
+  if (file && fileList.length === 1) {  
+    // 这里假设你已经处理了文件上传并得到了URL，或者你可以在这里触发上传  
+    // foodImg.value = '假设的URL'; // 实际应该是上传后从响应中获取的URL  
+    // 这里我们只模拟触发上传  
+    submitUpload();  
 
-const upload = ref<UploadInstance>()
+}
+}
+const upload = ref<any>()
 const submitUpload = () => {
   upload.value!.submit()
 }
@@ -173,13 +181,13 @@ watch(
           :limit="1"
           ref="upload"
           class="avatar-uploader"
-          action="http://192.168.43.170:8080/menu/upload"
+          action="http://127.0.0.1:8080/menu/upload"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
           :before-upload="beforeAvatarUpload"
           :on-exceed="handleExceed"
           :auto-upload="false"
-
+          @change="handleFoodImg"
         >
           <img v-if="props.ruleForm.foodImg" :src="props.ruleForm.foodImg" class="avatar" />
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>

@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted,defineEmits,defineProps} from 'vue'
-import {FormInstance,FormRules,UploadInstance,UploadProps,ElMessage,genFileId,UploadRawFile} from "element-plus"
-const emit = defineEmits(['handleFoodName','handleKindId','handleSale','handleFoodImg'])  
-const ruleFormRef = ref<FormInstance>();
+import { ref, reactive, onMounted,defineEmits,defineProps,watch, type Ref} from 'vue'
+import {type FormInstance,type FormRules,type UploadProps,ElMessage,genFileId,type UploadRawFile} from "element-plus"
+const emit = defineEmits(['handleFoodName','handleKindId','handleSale','handleFoodImg','reset'])  
+const ruleFormRef = ref<any>();
 interface IProps {
   ruleForm: {
-     foodName: '',  
-    sale: '',
-   kindId:''
+      foodName: '',  
+      sale: '',
+      kindId:''
       foodImg:'' ,
-      categories?:any
-  };
+      categories?:any,
+      resetKey: {  
+      type: Number,  
+      default: 0  
+    }  
+  }
+  
 }
 let props = defineProps<IProps>();
 const foodName = ref<String>('')
@@ -22,19 +27,30 @@ const handleKindId =() =>{
     console.log("菜品类型",kindId.value)
      emit("handleKindId",kindId)
 }
-const sale = ref<Number>()
+const sale : Ref<number | null> = ref(null)
 const handleSale = () =>{
     console.log("菜品售价",sale.value)
-     emit("handleSale",kindId)
+     emit("handleSale",sale)
 }
 const foodImg = ref<String>('')
-const handleFoodImg = () =>{
+const handleFoodImg = (file: any, fileList: any) =>{
+  if (file && fileList.length === 1) {  
+    // 这里假设你已经处理了文件上传并得到了URL，或者你可以在这里触发上传  
+    // foodImg.value = '假设的URL'; // 实际应该是上传后从响应中获取的URL  
+    // 这里我们只模拟触发上传  
+    submitUpload();  
     console.log("菜品图片",foodImg.value)
      emit("handleFoodImg",foodImg)
 
 }
+}
 console.log(props.ruleForm,"addForm")
-
+watch(
+  ()=>  props.ruleForm,
+  (newVal, oldVal) =>{  
+    console.log(props.ruleForm,"addForm")
+    }  
+    ) 
 // 验证函数  
 const checkKind = (rule: any, value: any, callback: any) => {  
   if (value == "") {  
@@ -67,6 +83,7 @@ const rules = reactive<FormRules<typeof props.ruleForm>>({
 });
 //重置
 const resetForm = (formEl: FormInstance | undefined) => {
+  console.log("ruleFormRef",formEl)
   if (!formEl) return
   formEl.resetFields()
 }
@@ -76,7 +93,6 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
   response,
   uploadFile
 ) => {
-  console.log("??????")
   foodImg.value = response.data
   console.log(response,"上传图片成功后返回")
   submitUpload()
@@ -98,18 +114,35 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   return true;  
 }
 
-const upload = ref<UploadInstance>()
+const uploadRef = ref<any>()
 const submitUpload = () => {
-  upload.value!.submit()
+  uploadRef.value!.submit()
 }
 
 const handleExceed: UploadProps['onExceed'] = (files) => {
-  upload.value!.clearFiles()
+  uploadRef.value!.clearFiles()
   const file = files[0] as UploadRawFile
   file.uid = genFileId()
-  upload.value!.handleStart(file)
+  uploadRef.value!.handleStart(file)
   submitUpload()
 }
+
+const resetInternalState = () => {  
+  foodName.value = '';  
+  kindId.value = '';  
+  sale.value = null;
+  foodImg.value = ''
+  console.log('子组件状态已重置');  
+}; 
+
+watch(
+  ()=>  props.ruleForm.resetKey,
+  (newVal, oldVal) =>{  
+      // 当 resetKey 变化时，执行重置逻辑  
+     resetInternalState();  
+    }  
+    ) 
+    console.log(foodImg,"foodImg")
 </script>
 
 <template>
@@ -117,7 +150,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
        <el-form
     ref="ruleFormRef"
     style="max-width: 600px"
-    :model="ruleForm"
+    :model="props.ruleForm"
     status-icon
     :rules="rules"
     label-width="auto"
@@ -151,7 +184,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
       <el-form-item label="菜品图片" prop="">
         <el-upload
           :limit="1"
-          ref="upload"
+          ref="uploadRef"
           class="avatar-uploader"
           action="http://127.0.0.1:8080/menu/upload"
           :show-file-list="false"
@@ -162,7 +195,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
         @change="handleFoodImg"
     
         >
-          <img v-if="foodImg" :src="foodImg" class="avatar" />
+          <img v-if="foodImg" :src="String(foodImg)" class="avatar" />
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </el-form-item>

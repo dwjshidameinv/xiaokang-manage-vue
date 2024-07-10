@@ -1,13 +1,35 @@
 <script setup lang='ts'>
 import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import Top from "../../components/TopForm.vue";
 import { API } from "./api";
 import formatDateTime from "../../utils/handel";
+const router = useRouter()
 const sel = reactive({
   ipValue: "",
   stateValue: -1,
   selectCategoryId: 0,
 });
+const options = reactive<any>([
+  {
+    id: 1,
+    name: "菜品分类",
+  },
+  {
+    id: 0,
+    name: "套餐分类",
+  },
+])
+const menu = [
+  {
+    id: 1,
+    state: "在售",
+  },
+  {
+    id: 0,
+    state: "停售",
+  },
+];
 const handleSelectValue = (newValue: any) => {
   sel.selectCategoryId = newValue;
   console.log(sel.selectCategoryId, "cateId");
@@ -57,8 +79,17 @@ const handleEdit = (index: number, row: any) => {
 const handleDelete = (index: number, row: any) => {
   console.log(index, row);
 };
+
 //在售停售调整
 const handleSaleVal = async (index: number, row: any) => {};
+
+//新增菜品分类
+const addDish = () =>{
+  router.push('/classify/add'); 
+}
+const addMeal = () =>{
+  
+}
 onMounted(() => {
   category(), selectMenuManageList();
 });
@@ -71,11 +102,23 @@ onMounted(() => {
         :front1="'分类名称'"
         :front2="'分类类型'"
         :front3="'状态'"
+        :menu="menu"
+        :options="options"
+        class="heihei"
       />
       <el-button
         style="background-color: bisque; margin-left: 10px"
         @click="selectMenuManageList"
         >查询</el-button
+      >
+      <el-button style="background-color: #000;color: azure;margin-left: 120px; font-size: 12px " type="danger" text @click="addDish"
+        >+ 新增菜品分类</el-button
+      >
+      <el-button
+        style=" color: #000; font-size: 12px ;margin-left: 20px;"
+        type="warning"
+        @click="addMeal"
+        >+ 新增套餐分类</el-button
       >
     </div>
     <div class="table-container">
@@ -118,7 +161,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="排序" width="80" align="center">
           <template #default="scope">
-            {{ scope.row.id }}
+            {{ scope.$index + 1 }}
           </template>
         </el-table-column>
         <el-table-column label="状态" align="center">
@@ -289,6 +332,11 @@ onMounted(() => {
   height: 80px;
   line-height: 80px;
   margin-left: 20px;
+  .heihei{
+    float: left;
+    height: 80px;
+    line-height: 80px;
+  }
 }
 .table-container {
   height: 500px; /* 设置外部容器的高度 */
@@ -303,10 +351,7 @@ onMounted(() => {
     height: 100px;
   }
 }
-.ttop {
-  height: 80px;
-  line-height: 80px;
-}
+
 
 .MyTopForm {
   float: left;

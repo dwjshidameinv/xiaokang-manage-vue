@@ -5,7 +5,6 @@ import type { IMenu } from "./type";
 import TopForm from "../../components/TopForm.vue";
 import Edit from "./editForm.vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { loadavg } from "os";
 import type { IEdit } from "./type";
 import Add from "./addDish.vue"
 
@@ -239,7 +238,7 @@ const handleKindId = (val:any)=>{
   foodKindId.value = val
   console.log("foodKindId:",foodKindId.value)
 }
-const foodSale = ref<any>('')
+const foodSale = ref<any>(0)
 const handleSale = (val:any)=>{
   foodSale.value = val
   console.log("foodSale:",foodSale.value)
@@ -249,12 +248,20 @@ const handleFoodImg = (val:any)=>{
   foodImg.value = val
   console.log("foodImg:",foodImg.value)
 }
+
+const resetKey = ref<number>(0)
 const addDish = () =>{
   dialogVisible2.value = true;
   ruleForm2.value = {
     categories: category.value, 
+    resetKey:resetKey.value
   };
 }
+// 新增重置方法  
+const handleReset = () => {  
+  resetKey.value++
+};  
+
 //新增菜品提交
 const submitAdd = () =>{
    const addData = reactive<IEdit>({
@@ -277,7 +284,7 @@ const submitAdd = () =>{
           type:"success"
         })
         await selectMenuList();
-        console.log("添加成功后执行",res)
+        console.log("添加成功后执行",res )
       }else{
           // 处理网络错误或其他异常
         ElMessage({
@@ -302,6 +309,7 @@ const submitAdd = () =>{
       });
   })
   dialogVisible2.value = false;
+  handleReset()
 }
 //在售停售调整
 const handleSaleVal = async (index: number, row: IMenu) =>{
@@ -451,7 +459,7 @@ onMounted(() => {
 
 <template>
   <div class="border1">
-    <div class="ttop">
+    <div class="containerTop">
       <TopForm
         :placeholder1="List.placeholder1"
         :front1="List.front1"
@@ -463,7 +471,7 @@ onMounted(() => {
         @selectValue2="handleSelectValue2"
         :menu="menu"
         :front3="List.front3"
-        class="MyTopForm"
+        class="heihei"
       />
       <el-button
         style="background-color: bisque; margin-left: 10px"
@@ -481,6 +489,7 @@ onMounted(() => {
         >+ 新增菜品</el-button
       >
     </div>
+    <div class="table-container">
     <div v-if="isLoading" class="loading-box">
       <svg
         t="1717852293366"
@@ -504,7 +513,9 @@ onMounted(() => {
     <el-table
       v-if="!isLoading && tableData.length >= 1"
       :data="tableData"
+      stripe
       style="width: 100%"
+      height="500px"
       @selection-change="handleSelectionChange"
       :row-class-name="tableRowClassName"
       class="myTable"
@@ -704,7 +715,7 @@ onMounted(() => {
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
-
+  </div>
     <el-dialog v-model="dialogVisible1" title="编辑菜品" width="500">
       <Edit :ruleForm="ruleForm" ref="editForm" />
       <template #footer>
@@ -717,7 +728,7 @@ onMounted(() => {
 
     <el-dialog v-model="dialogVisible2" title="新增菜品" width="500" draggable
      > 
-    <Add @handleFoodName="handelFoodName" @handleKindId="handleKindId" @handleSale="handleSale" @handleFoodImg="handleFoodImg" :ruleForm ="ruleForm2" />
+    <Add @handleFoodName="handelFoodName" @handleKindId="handleKindId" @handleSale="handleSale" @handleFoodImg="handleFoodImg" :ruleForm ="ruleForm2"  />
      <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible2 = false">取消</el-button>
@@ -729,17 +740,25 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.border1{
+.border1 {
   background-color: #fff;
-   margin-left: 20px;
-   margin-top: 20px;
-   width: 1320px;
+  margin-left: 20px;
+  margin-top: 20px;
+  width: 1320px;
 }
-.el-table .warning-row {
-  --el-table-tr-bg-color: var(--el-color-warning-light-9);
+.containerTop{
+  height: 80px;
+  line-height: 80px;
+  margin-left: 20px;
+  .heihei{
+    float: left;
+    height: 80px;
+    line-height: 80px;
+  }
 }
-.el-table .success-row {
-  --el-table-tr-bg-color: var(--el-color-success-light-9);
+.table-container {
+  height: 550px; /* 设置外部容器的高度 */
+  overflow-y: auto; /* 允许内容垂直滚动 */
 }
 .loading-box {
   width: 800px;
@@ -750,14 +769,9 @@ onMounted(() => {
     height: 100px;
   }
 }
-.ttop {
-  height: 80px;
-  line-height: 80px;
-}
 
-.MyTopForm {
-  float: left;
-}
+
+
 .myTable {
   font-size: 12px;
 }
@@ -766,7 +780,7 @@ onMounted(() => {
 }
 .box {
   width: 900px;
-  height: 600px;
+  height: 550px;
   .icon.hahaa {
     margin-left: 450px;
     margin-top: 200px;

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted} from 'vue'
-
+console.log("aidod")
 </script>
 
 <template>
   <div>
-556
+    122
   </div>
 </template>
 
