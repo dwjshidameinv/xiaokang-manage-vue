@@ -46,10 +46,10 @@ const handleSelectValue2 = (value: any) => {
   console.log(sel.state, "state");
 };
 
-const category = async () => {
-  let res = await API["category"]();
-  console.log("meal种类", res);
-};
+// const category = async () => {
+//   let res = await API["category"]();
+//   console.log("meal种类", res);
+// };
 const isLoading = ref<any>(true);
 const tableData = ref<any>([]);
 
@@ -202,7 +202,7 @@ const addMeal = () =>{
   router.push({path:'/classify/add',query: { type: 'meal' } }); 
 }
 onMounted(() => {
-  category(), selectMenuManageList();
+   selectMenuManageList();
 });
 </script>
 <template>
