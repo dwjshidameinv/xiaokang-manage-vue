@@ -10,3 +10,25 @@ export const useCounterStore = defineStore('counter', () => {
 
   return { count, doubleCount, increment }
 })
+
+export const useRowStore = defineStore('row', {  
+  state: () => ({  
+    currentRow: null  
+  }),  
+  actions: {  
+    setCurrentRow(row:any) {  
+      this.currentRow = row;  
+    }  
+  }  
+})
+
+export const usePageLoadStatusStore = defineStore('pageLoadStatus', {  
+  state: () => ({  
+    isClassifyEditLoaded: false,  
+  }),  
+  actions: {  
+    setClassifyEditLoaded(status:any) {  
+      this.isClassifyEditLoaded = status;  
+    },  
+  },  
+});

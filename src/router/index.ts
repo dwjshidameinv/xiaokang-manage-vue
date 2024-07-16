@@ -5,6 +5,7 @@ import Layout from "@/views/Layout/index.vue"
 import NoFound from "@/views/404.vue"
 import Work from "@/views/Work/index.vue"
 import Add from "@/views/classify/component/add.vue"
+import { usePageLoadStatusStore } from '@/stores/counter'
 export const asyncRoutes: RouteRecordRaw [] =[
   {
     path:"/",
@@ -138,9 +139,13 @@ export const staticRoutes:RouteRecordRaw[]=[
     }
   }
 ]
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes:[...asyncRoutes, ...staticRoutes]
 })
+
+
+ 
 
 export default router

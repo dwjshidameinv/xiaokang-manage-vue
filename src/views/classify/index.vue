@@ -1,22 +1,25 @@
 <script setup lang='ts'>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch,  watchEffect } from "vue";
 import { useRouter } from "vue-router";
 import Top from "../../components/TopForm.vue";
 import { API } from "./api";
 import formatDateTime from "../../utils/handel";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useRowStore } from "../../stores/counter";
 const router = useRouter()
+
 const sel = reactive({
-  ipValue: "",
-  stateValue: -1,
-  selectCategoryId: 0,
+  name: "",
+  state: -1,
+  categoryId: -1,
 });
 const options = reactive<any>([
   {
-    id: 1,
+    id: 0,
     name: "菜品分类",
   },
   {
-    id: 0,
+    id: 1,
     name: "套餐分类",
   },
 ])
@@ -31,38 +34,30 @@ const menu = [
   },
 ];
 const handleSelectValue = (newValue: any) => {
-  sel.selectCategoryId = newValue;
-  console.log(sel.selectCategoryId, "cateId");
+  sel.categoryId = newValue;
+  console.log(sel.categoryId, "cateId");
 };
 const handleInputValue = (input: any) => {
-  sel.ipValue = input;
-  console.log(sel.ipValue, "inputValueText");
+  sel.name = input;
+  console.log(sel.name, "inputValueText");
 };
 const handleSelectValue2 = (value: any) => {
-  sel.stateValue = value;
-  console.log(sel.stateValue, "stateValue");
+  sel.state = value;
+  console.log(sel.state, "state");
 };
-//  :options="category"
-//         @selectValue1="handleSelectValue"
-//         @inputValue="handleInputValue"
-//         @selectValue2="handleSelectValue2"
-//         :menu="menu"
-//         :front3="'状态'"
-//         class="MyTopForm"
+
 const category = async () => {
   let res = await API["category"]();
   console.log("meal种类", res);
 };
 const isLoading = ref<any>(true);
-const tableData = ref<any>();
+const tableData = ref<any>([]);
+
+
 const selectMenuManageList = async () => {
-  const sel = reactive({
-    state: -1,
-    name: "",
-    categoryId: 0,
-  });
+  isLoading.value = true;
   await new Promise((resolve) => {
-    setTimeout(resolve, 500); // 延迟2秒后解析Promise
+    setTimeout(resolve, 100); // 延迟2秒后解析Promise
   });
   let res = await API["list"](sel);
   if (res != null) {
@@ -71,31 +66,147 @@ const selectMenuManageList = async () => {
   }
   isLoading.value = false;
 };
+watch(
+  () => isLoading,
+  (newValue) => selectMenuManageList()
+);
+// 使用 watchEffect 监听 sel 的变化  
+// watchEffect(() => {  
+//   // 检查 sel 是否为空  
+//   if ( sel.name == "" && sel.categoryId == undefined && sel.state == undefined) {  
+//     // 所有属性都为空，执行查询  
+//     selectMenuManageList();  
+//   }  
+// }); 
+watch(() =>sel,
+()=>{
+  // if ( sel.name == ""||undefined && sel.categoryId == undefined && sel.state == undefined) {  
+  //   // 所有属性都为空，执行查询  
+  //   selectMenuManageList();  
+  // }
+  selectMenuManageList();  
+  },
+  {immediate:true,deep: true}
+)
 //编辑操作
-const handleEdit = (index: number, row: any) => {
-  console.log(index, row);
-};
+const handleEdit = async(index: number, row: any) => { 
+  // console.log(index, row);
+  const rowStore = useRowStore();  
+  rowStore.setCurrentRow(row);  
+  console.log("rowStore.currentRow",rowStore.currentRow)
+  if(row.categoryId ==0 ){
+    router.push({path:'/classify/edit',query:{ type: 'dish',}})
+  
+  }else{
+    router.push({path:'/classify/edit',query:{ type: 'meal'}})
 
-const handleDelete = (index: number, row: any) => {
-  console.log(index, row);
+  }
+}
+
+//删除操作
+const handleDelete = async(index: number, row: any) => {
+  // console.log(index, row);
+  let id = row.id
+  ElMessageBox.confirm("确定要删除吗？", "删除提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      let res = await API['delete'](id)
+      try {
+        if (res.data.code == 200) {
+          console.log(res, "删除操作执行");
+          ElMessage({
+            type: "success",
+            message: "删除成功",
+          });
+          await selectMenuManageList();
+        } else {
+          // 处理错误或失败的响应
+          ElMessage({
+            message: res.data.data,
+            type: "error",
+          });
+        }
+      } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+      }
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "删除取消",
+      });
+    });
 };
 
 //在售停售调整
-const handleSaleVal = async (index: number, row: any) => {};
+const handleSaleVal = async (index: number, row: any) =>{
+  // console.log("www",row)
+  const state = ref<any>()
+  const editForm = reactive<any>({
+    id:row.id,
+    state:row.state == 1 ? 0 : 1
+  })
+  let res = await API["edit"](editForm);
+   ElMessageBox.confirm("确定修改状态？", "修改提醒", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then( async()=> {
+    let res = await API['edit'](editForm)
+    try {
+      if(res.data.code ===200 &&res.data.data == 1){
+        ElMessage({
+          message:"修改成功",
+          type:"success"
+        })
+        await selectMenuManageList();
+        console.log("修改成功后执行",res)
+      }else{
+          // 处理网络错误或其他异常
+        ElMessage({
+          message: res.data.data,
+          type: "error",
+        });
+      }
+      
+    } catch (error) {
+        // 处理网络错误或其他异常
+        console.error(error);
+        ElMessage({
+          message: "发生错误",
+          type: "error",
+        });
+    }
+  })
+  .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "修改取消",
+      });
+  })
+}
 
 //新增菜品分类
 const addDish = () =>{
-  router.push('/classify/add'); 
+  router.push({path:'/classify/add',query: { type: 'dish' } }); 
 }
 const addMeal = () =>{
-  
+  router.push({path:'/classify/add',query: { type: 'meal' } }); 
 }
 onMounted(() => {
   category(), selectMenuManageList();
 });
 </script>
 <template>
-  <div class="border1">
+  
     <div class="containerTop">
       <Top
         :placeholder1="'分类名称'"
@@ -104,6 +215,9 @@ onMounted(() => {
         :front3="'状态'"
         :menu="menu"
         :options="options"
+        @selectValue1="handleSelectValue"
+       @inputValue="handleInputValue"
+       @selectValue2="handleSelectValue2"
         class="heihei"
       />
       <el-button
@@ -149,7 +263,7 @@ onMounted(() => {
         height="500px"
       >
         <el-table-column type="selection" width="80" align="center" />
-        <el-table-column label="分类名称" width="80" align="center">
+        <el-table-column label="分类名称" align="center">
           <template #default="scope">
             {{ scope.row.name }}
           </template>
@@ -159,7 +273,7 @@ onMounted(() => {
             {{ scope.row.category }}
           </template>
         </el-table-column>
-        <el-table-column label="排序" width="80" align="center">
+        <el-table-column label="排序"  align="center">
           <template #default="scope">
             {{ scope.$index + 1 }}
           </template>
@@ -318,7 +432,7 @@ onMounted(() => {
         </svg>
       </div>
     </div>
-  </div>
+
 </template>
 
 <style lang="scss" scoped>
@@ -339,7 +453,7 @@ onMounted(() => {
   }
 }
 .table-container {
-  height: 500px; /* 设置外部容器的高度 */
+  height: 550px; /* 设置外部容器的高度 */
   overflow-y: auto; /* 允许内容垂直滚动 */
 }
 .loading-box {

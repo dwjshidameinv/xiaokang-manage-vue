@@ -458,7 +458,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="border1">
+  <div>
     <div class="containerTop">
       <TopForm
         :placeholder1="List.placeholder1"
@@ -740,12 +740,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.border1 {
-  background-color: #fff;
-  margin-left: 20px;
-  margin-top: 20px;
-  width: 1320px;
-}
+
 .containerTop{
   height: 80px;
   line-height: 80px;
