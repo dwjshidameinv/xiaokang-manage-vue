@@ -59,10 +59,16 @@ export const asyncRoutes: RouteRecordRaw [] =[
       til:"套餐管理",
       icon:"Bowl"
     },
-    children:[{
-      path:"mealPackage",
-      component:()=>import("../views/mealPackage/index.vue"),
-    }]
+    children:[
+      {
+        path:"mealPackage",
+        component:()=>import("../views/mealPackage/index.vue"),
+       },
+       {
+        path:"add",
+        component:()=>import("../views/mealPackage/addMeal.vue"),
+       }
+  ]
   },
   {
     path:"/dish",
