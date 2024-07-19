@@ -4,6 +4,9 @@ import {ref,reactive, onMounted, watch} from 'vue'
 import TopForm from "../../components/TopForm.vue" 
  import {API} from "./api"
  import formatDateTime from "../../utils/handel"
+ import { useRouter } from 'vue-router';
+import { useRowStore } from '@/stores/counter';
+ const router = useRouter()
  const sel = reactive({
   name: "",
   state: -1,
@@ -63,7 +66,9 @@ watch(() =>sel,
 
 //新增套餐
 const addMeal = () =>{
-  
+  const rowStore = useRowStore();  
+  rowStore.setCurrentRow(category.value);  
+  router.push("/mealPackage/add")
 }
 const multipleSelection = ref<any[]>([]);
 const handleSelectionChange = (val: any[]) => {
